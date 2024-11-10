@@ -13,9 +13,9 @@
 	;---------------------------
 	
 	; Formato de salida de datos
-	xpos_f = '<X=>5.3(p)< >' ;el sufijo < >, es simplemente un espacio libre de separación
-	ypos_f = '<Y=>5.3(p i)< >' ;la opción(p), si el numero no tiene decimales, no imprima el punto de la decimal
-	zpos_f = '<Z=>5.3(p i)< >' ;la opción(i) invierte el signo de positivo a negativo y viceversa
+	xpos_f = '<X=>5.3(p)< >' ;el sufijo < >, es simplemente un espacio libre de separacion
+	ypos_f = '<Y=>5.3(p i)< >' ;la opcion(p), si el numero no tiene decimales, no imprima el punto de la decimal
+	zpos_f = '<Z=>5.3(p i)< >' ;la opcion(i) invierte el signo de positivo a negativo y viceversa
 	zhpos_f = '<H=>5.3(p)< >' ;es la altura del fresado desde la mesa de trabajo
 	apos_f = '<Q=>5.3(p)< >'
 	bpos_f = '<R=>5.3(p)< >' 
@@ -25,7 +25,7 @@
 	i_EspecularY = 1
 	iDefTool = 1
 
-	blknum_gen = false ;sin numeración de linea de código
+	blknum_gen = false ;sin numeracion de linea de codigo
 
 	if user_account eq 'rares'
 		input 'Ingrese el nivel de rastreo (0; 1; 5)' i_TraceLevel
@@ -107,9 +107,7 @@ endp
 	{nl '; TIPO OPERACION: ' job_type}
 	call @def_tool
 	l_FirstMove = true
-	;if first_plane_angle eq 180 and second_plane_angle eq -90
-	;{nb 'F=4'}
-	;endif
+	
 endp
 ;========================================
 @end_of_job
