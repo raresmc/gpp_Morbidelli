@@ -1,0 +1,154 @@
+; Version: 1.5
+@init_post
+
+	global integer i_TraceLevel, i_EspecularY, iDefTool
+	global string s_CAM_Programmer
+
+	global string bpos_f 
+	global logical l_FirstMove
+	;---------------------------
+	global string sSeconds, sMinutes, sHours
+	global integer iSeconds<<1000>> iMinutes<<1000>> iHours<<1000>>
+	global integer iSumaSeconds, iSumaMinutes, iSumaHours 
+	;---------------------------
+	
+	; Formato de salida de datos
+	xpos_f = '<X=>5.3(p)< >' ;el sufijo < >, es simplemente un espacio libre de separaci√≥n
+	ypos_f = '<Y=>5.3(p i)< >' ;la opci√≥n(p), si el numero no tiene decimales, no imprima el punto de la decimal
+	zpos_f = '<Z=>5.3(p i)< >' ;la opci√≥n(i) invierte el signo de positivo a negativo y viceversa
+	zhpos_f = '<H=>5.3(p)< >' ;es la altura del fresado desde la mesa de trabajo
+	apos_f = '<Q=>5.3(p)< >'
+	bpos_f = '<R=>5.3(p)< >' 
+	gcode_f = '<G>5.3(n)< >'
+	;---------------------------
+
+	i_EspecularY = 1
+	iDefTool = 1
+
+	blknum_gen = false ;sin numeraci√≥n de linea de c√≥digo
+
+	if user_account eq 'rares'
+		input 'Ingrese el nivel de rastreo (0; 1; 5)' i_TraceLevel
+		trace 'all':i_TraceLevel
+	else
+		trace 'all':0
+	endif
+
+endp
+;#######################################################################
+
+@start_of_file
+
+	local string sL_SolidcamVersion 
+	s_CAM_Programmer = user_account
+	
+	sL_SolidcamVersion = get_solidcam_version
+	;HEADER
+	{nl'H DX='stock_x 'DY='stock_y 'DZ='stock_z '-A C=0 T=0 R=1 *MM /"def"'}
+	{nl ';'}
+	{nl ';' 'SolidCAM version: 'sL_SolidcamVersion }
+	{nl ';' 'Programado por : 's_CAM_Programmer }
+	{nl ';' 'FECHA-HORA: ' date ' ' time }
+	{nl ';'}
+	{nl ';' 'HERRAMIENTAS UTILIZADAS' }
+endp
+;========================================
+
+@def_tool
+	local string sL_Diam 
+	sL_Diam = 'D'
+
+	call @usr_replaced_str(sL_Diam);Reemplaza el caracter D con el signo ÿ (ALT-157)
+	{nl ';' 'T' tool_id_number' - ' tool_user_type ' ' sL_Diam tool_diameter:'5.3(p)<mm >' }
+	
+endp
+;========================================
+
+@start_program
+
+	{nl ';'}
+	; Calcula el tiempo total del mecanizado
+	sHours = substr(tool_work_time,1,3)
+	sMinutes = substr(tool_work_time,5,2)
+	sSeconds = substr(tool_work_time,8,2)
+	;---------------------------
+	iHours<<iDefTool>> = tonum(sHours)
+	iMinutes<<iDefTool>> = tonum(sMinutes)
+	iSeconds<<iDefTool>> = tonum(sSeconds)
+	;---------------------------
+	iSumaHours = iSumaHours + iHours<<iDefTool>>
+	iSumaMinutes = iSumaMinutes+ iMinutes<<iDefTool>>
+	iSumaSeconds = iSumaSeconds + iSeconds<<iDefTool>>
+	;---------------------------
+	if iSumaSeconds ge 60
+		iSumaSeconds = mod(iSumaSeconds,60)
+		iSumaMinutes = iSumaMinutes +1
+	endif
+	if iSumaMinutes ge 60
+		iSumaMinutes = mod(iSumaMinutes,60)
+		iSumaHours = iSumaHours +1
+	endif
+	;---------------------------
+	if next_command eq '@def_tool'
+		iDefTool = iDefTool + 1
+	else
+		if tool_work_time ne '  0:00:00'
+			{nl '; Total Tiempo Mecanizado : 'iSumaHours:'3/3.0(p)'':'iSumaMinutes:'2/2.0(p)'':'iSumaSeconds:'2/2.0(p)'}
+		endif
+	endif
+	{nl 'SY='i_EspecularY ' M=1'} ;debido al area de trabajo trasero de la maquina tenemos que especular en Y todo el trabajo
+endp
+;========================================
+
+@start_of_job
+
+	;El nombre de la operacion que se ejecuta
+	{nl '; NOMBRE OPERACION: ' job_name}
+	{nl '; TIPO OPERACION: ' job_type}
+	call @def_tool
+	l_FirstMove = true
+	;if first_plane_angle eq 180 and second_plane_angle eq -90
+	;{nb 'F=4'}
+	;endif
+endp
+;========================================
+@end_of_job
+	{nl ';-------------FIN ' job_name ' ------------------------' }
+endp
+;========================================
+@end_of_file
+	{nl 'XN X=4400'}
+endp
+;========================================
+;#######################################################################
+
+;#region 5 Ejes
+;==========================================
+;#######################################################################
+; Funciona con SolidCAM Multiaxis -> Sim. 5-Axis Milling
+;================== X5 ========================
+@move_5x
+	gcode = 0
+	
+	; si es el primer movimiento, entonces especifica el numero de herramienta
+	if l_FirstMove
+		{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, 'T='[tool_id_number]}
+		l_FirstMove = false
+	endif
+endp
+;========================================
+
+@line_5x 
+	gcode = 1
+	
+	{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos }	
+endp
+;========================================
+
+;Reemplaza el caracter D con el signo ÿ (ALT-157)
+@usr_replaced_str(string sReplaced)
+	sReplaced = replace(sReplaced,'D','ÿ',0)
+endp
+;========================================
+;#######################################################################
+
