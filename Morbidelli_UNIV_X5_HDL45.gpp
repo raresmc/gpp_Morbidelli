@@ -1,8 +1,12 @@
+; Morbidelli Universal X5 HDL45 for SolidCAM
+; Setup: Head-to-Head 5 axis mill. A axis rotary along X, C axis rotary along C
+; C axis is independent axis
+; A axis is dependent axis
 ; Version: 1.6
 @init_post
 
 	global integer i_TraceLevel, i_EspecularY, iDefTool
-	global string s_CAM_Programmer
+	global string s_CAM_Programmer, spin_f
 
 	global string bpos_f 
 	global logical l_FirstMove
@@ -20,7 +24,9 @@
 	apos_f = '<Q=>5.3(p)< >'
 	bpos_f = '<R=>5.3(p)< >' 
 	gcode_f = '<G>5.3(n)< >'
-	;---------------------------
+	feed_f = '<V=>5.3(n)< >' ; velocidad de anvance
+	spin_f = '<S=>5.3(n)< >' ; velocidad de rotacion mandril
+ 	;---------------------------
 
 	i_EspecularY = 1
 	iDefTool = 1
@@ -130,7 +136,7 @@ endp
 	
 	; si es el primer movimiento, entonces especifica el numero de herramienta
 	if l_FirstMove
-		{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, 'T='[tool_id_number]}
+		{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, 'T='[tool_id_number], [feed], [spin] }
 		l_FirstMove = false
 	endif
 endp
@@ -139,7 +145,7 @@ endp
 @line_5x 
 	gcode = 1
 	
-	{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos }	
+	{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, [feed], [spin] }	
 endp
 ;========================================
 
