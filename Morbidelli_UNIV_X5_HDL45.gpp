@@ -12,7 +12,7 @@
 	global logical l_FirstMove
 	;---------------------------
 	global string sSeconds, sMinutes, sHours
-	global integer iSeconds<<1000>> iMinutes<<1000>> iHours<<1000>>
+	global integer iSeconds<<1000>>, iMinutes<<1000>>, iHours<<1000>>
 	global integer iSumaSeconds, iSumaMinutes, iSumaHours 
 	;---------------------------
 	
@@ -32,6 +32,7 @@
 	iDefTool = 1
 
 	blknum_gen = false ;sin numeracion de linea de codigo
+	blknum_exist = false
 
 	if user_account eq 'rares'
 		input 'Ingrese el nivel de rastreo (0; 1; 5)' i_TraceLevel
@@ -45,16 +46,18 @@ endp
 
 @start_of_file
 
-	local string sL_SolidcamVersion 
+	local string sL_SolidcamVersion, sL_versionGPP 
 	s_CAM_Programmer = user_account
 	
 	sL_SolidcamVersion = get_solidcam_version
+	sL_versionGPP = '1.6'
 	;HEADER
-	{nl'H DX='stock_x 'DY='stock_y 'DZ='stock_z '-A C=0 T=0 R=1 *MM /"def"'}
+	{nb'H DX='stock_x 'DY='stock_y 'DZ='stock_z '-A C=0 T=0 R=1 *MM /"def"'}
 	{nl ';'}
+	{nl ';' 'GPP version:      'sL_versionGPP }
 	{nl ';' 'SolidCAM version: 'sL_SolidcamVersion }
-	{nl ';' 'Programado por : 's_CAM_Programmer }
-	{nl ';' 'FECHA-HORA: ' date ' ' time }
+	{nl ';' 'Programado por :  's_CAM_Programmer }
+	{nl ';' 'FECHA-HORA:       ' date ' ' time }
 	{nl ';'}
 	{nl ';' 'HERRAMIENTAS UTILIZADAS' }
 endp
@@ -121,7 +124,7 @@ endp
 endp
 ;========================================
 @end_of_file
-	{nl 'XN X=4400'}
+	{nb 'XN X=4400'}
 endp
 ;========================================
 ;#######################################################################
@@ -136,7 +139,7 @@ endp
 	
 	; si es el primer movimiento, entonces especifica el numero de herramienta
 	if l_FirstMove
-		{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, 'T='[tool_id_number], [feed], [spin] }
+		{nb gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, 'T='[tool_id_number], [feed], [spin] }
 		l_FirstMove = false
 	endif
 endp
@@ -145,7 +148,7 @@ endp
 @line_5x 
 	gcode = 1
 	
-	{nl gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, [feed], [spin] }	
+	{nb gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, [feed], [spin] }	
 endp
 ;========================================
 
