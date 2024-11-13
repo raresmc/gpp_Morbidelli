@@ -6,7 +6,7 @@
 @init_post
 
 	global integer i_TraceLevel, iDefTool
-	global string s_CAM_Programmer, spin_f
+	global string spin_f
 
 	global string bpos_f 
 	global logical l_FirstMove
@@ -28,7 +28,6 @@
 	spin_f = '<S=>5.3(n)< >' ; velocidad de rotacion mandril
  	;---------------------------
 	iDefTool = 1
-
 	blknum_gen = false ;sin numeracion del bloque de codigo
 	blknum_exist = false
 
@@ -43,8 +42,8 @@ endp
 ;#######################################################################
 @start_of_file
 
-	local string sL_SolidcamVersion, sL_versionGPP 
-	s_CAM_Programmer = user_account
+	local string sL_SolidcamVersion, sL_versionGPP, sL_CAM_Programmer 
+	sL_CAM_Programmer = user_account
 	
 	sL_SolidcamVersion = get_solidcam_version
 	sL_versionGPP = '1.6'
@@ -53,7 +52,7 @@ endp
 	{nl ';'}
 	{nl '; GPP version:      'sL_versionGPP }
 	{nl '; SolidCAM version: 'sL_SolidcamVersion }
-	{nl '; Programado por :  's_CAM_Programmer }
+	{nl '; Programado por :  'sL_CAM_Programmer }
 	{nl '; FECHA-HORA:       ' date ' ' time }
 	{nl ';'}
 	{nl '; HERRAMIENTAS UTILIZADAS' }
@@ -66,7 +65,10 @@ endp
 	sL_Diam = 'D'
 
 	call @usr_replaced_str(sL_Diam);Reemplaza el caracter D con el signo Ø (ALT-157)
-	{nl '; T' tool_id_number' - ' tool_user_type ' ' sL_Diam tool_diameter:'5.3(p)<mm >' }
+	{nl ';  -> T' tool_id_number' - ' tool_user_type ' ' sL_Diam, tool_diameter:'5.3(p)<mm >' }
+	if next_command eq '@start_program'
+		{nl '; ========================================' }
+	endif
 	
 endp
 ;========================================
@@ -121,7 +123,10 @@ endp
 ;========================================
 @end_of_job
 
-	{nl ';-------------FIN ' job_name ' ------------------------' }
+	{nl ';'}
+	{nl '; -------------FIN ' job_name ' -----------------------' }
+	{nl '; =====================================================' }
+	{nl ';'}
 
 endp
 ;========================================
@@ -138,7 +143,6 @@ endp
 ; Funciona con SolidCAM Multiaxis -> Sim. 5-Axis Milling
 ;================== X5 ========================
 @move_5x
-
 	gcode = 0
 	
 	; si es el primer movimiento, entonces especifica el numero de herramienta
