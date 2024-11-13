@@ -5,7 +5,7 @@
 ; Version: 1.6
 @init_post
 
-	global integer i_TraceLevel, i_EspecularY, iDefTool
+	global integer i_TraceLevel, iDefTool
 	global string s_CAM_Programmer, spin_f
 
 	global string bpos_f 
@@ -24,17 +24,15 @@
 	apos_f = '<Q=>5.3(p)< >'
 	bpos_f = '<R=>5.3(p)< >' 
 	gcode_f = '<G>5.3(n)< >'
-	feed_f = '<V=>5.3(n)< >' ; velocidad de anvance
+	feed_f = '< V=>5.3(n)< >' ; velocidad de anvance
 	spin_f = '<S=>5.3(n)< >' ; velocidad de rotacion mandril
  	;---------------------------
-
-	i_EspecularY = 1
 	iDefTool = 1
 
-	blknum_gen = false ;sin numeracion de linea de codigo
+	blknum_gen = false ;sin numeracion del bloque de codigo
 	blknum_exist = false
 
-	if user_account eq 'rares'
+	if user_account eq 'rares' ;eq ==
 		input 'Ingrese el nivel de rastreo (0; 1; 5)' i_TraceLevel
 		trace 'all':i_TraceLevel
 	else
@@ -43,7 +41,6 @@
 
 endp
 ;#######################################################################
-
 @start_of_file
 
 	local string sL_SolidcamVersion, sL_versionGPP 
@@ -52,27 +49,27 @@ endp
 	sL_SolidcamVersion = get_solidcam_version
 	sL_versionGPP = '1.6'
 	;HEADER
-	{nb'H DX='stock_x 'DY='stock_y 'DZ='stock_z '-A C=0 T=0 R=1 *MM /"def"'}
+	{nb 'H DX='stock_x 'DY='stock_y 'DZ='stock_z '-A C=0 T=0 R=1 *MM /"def"'}
 	{nl ';'}
-	{nl ';' 'GPP version:      'sL_versionGPP }
-	{nl ';' 'SolidCAM version: 'sL_SolidcamVersion }
-	{nl ';' 'Programado por :  's_CAM_Programmer }
-	{nl ';' 'FECHA-HORA:       ' date ' ' time }
+	{nl '; GPP version:      'sL_versionGPP }
+	{nl '; SolidCAM version: 'sL_SolidcamVersion }
+	{nl '; Programado por :  's_CAM_Programmer }
+	{nl '; FECHA-HORA:       ' date ' ' time }
 	{nl ';'}
-	{nl ';' 'HERRAMIENTAS UTILIZADAS' }
+	{nl '; HERRAMIENTAS UTILIZADAS' }
+
 endp
 ;========================================
-
 @def_tool
+
 	local string sL_Diam 
 	sL_Diam = 'D'
 
 	call @usr_replaced_str(sL_Diam);Reemplaza el caracter D con el signo Ø (ALT-157)
-	{nl ';' 'T' tool_id_number' - ' tool_user_type ' ' sL_Diam tool_diameter:'5.3(p)<mm >' }
+	{nl '; T' tool_id_number' - ' tool_user_type ' ' sL_Diam tool_diameter:'5.3(p)<mm >' }
 	
 endp
 ;========================================
-
 @start_program
 
 	{nl ';'}
@@ -89,52 +86,59 @@ endp
 	iSumaMinutes = iSumaMinutes+ iMinutes<<iDefTool>>
 	iSumaSeconds = iSumaSeconds + iSeconds<<iDefTool>>
 	;---------------------------
-	if iSumaSeconds ge 60
+	if iSumaSeconds ge 60 ;ge >=
 		iSumaSeconds = mod(iSumaSeconds,60)
 		iSumaMinutes = iSumaMinutes +1
 	endif
-	if iSumaMinutes ge 60
+	if iSumaMinutes ge 60 ;ge >=
 		iSumaMinutes = mod(iSumaMinutes,60)
 		iSumaHours = iSumaHours +1
 	endif
 	;---------------------------
-	if next_command eq '@def_tool'
+	if next_command eq '@def_tool' ; eq ==
 		iDefTool = iDefTool + 1
 	else
-		if tool_work_time ne '  0:00:00'
+		if tool_work_time ne '  0:00:00' ; ne <>
 			{nl '; Total Tiempo Mecanizado : 'iSumaHours:'3/3.0(p)'':'iSumaMinutes:'2/2.0(p)'':'iSumaSeconds:'2/2.0(p)'}
 		endif
 	endif
-	{nl 'SY='i_EspecularY ' M=1'} ;debido al area de trabajo trasero de la maquina tenemos que especular en Y todo el trabajo
+
 endp
 ;========================================
-
 @start_of_job
 
 	;El nombre de la operacion que se ejecuta
-	{nl '; NOMBRE OPERACION: ' job_name}
-	{nl '; TIPO OPERACION: ' job_type}
+	{nl '; NOMBRE OPERACION: ' job_name }
+	{nl '; TIPO OPERACION: '   job_type }
 	call @def_tool
 	l_FirstMove = true
+	;debido al origen de la maquina que es trasero tenemos que especular en Y todo el trabajo
+	;Cambia el origen en Y desplazándolo hacia el ángulo opuesto. 
+	;Esta instrucción se activa con la entrada automática en el perfil o el inicio fresado.
+	{ nb bVMID_WO_SpeculateY:'<SY=>5.3(p)< >', bVMID_Invertir_Fresado:'<M=>5.3(p)' }
 	
 endp
 ;========================================
 @end_of_job
+
 	{nl ';-------------FIN ' job_name ' ------------------------' }
+
 endp
 ;========================================
 @end_of_file
+
 	{nb 'XN X=4400'}
+
 endp
 ;========================================
 ;#######################################################################
-
 ;#region 5 Ejes
 ;==========================================
 ;#######################################################################
 ; Funciona con SolidCAM Multiaxis -> Sim. 5-Axis Milling
 ;================== X5 ========================
 @move_5x
+
 	gcode = 0
 	
 	; si es el primer movimiento, entonces especifica el numero de herramienta
@@ -142,19 +146,22 @@ endp
 		{nb gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, 'T='[tool_id_number], [feed], [spin] }
 		l_FirstMove = false
 	endif
+
 endp
 ;========================================
-
 @line_5x 
+
 	gcode = 1
 	
 	{nb gcode:'<G>5.3(n)<3D >' xpos, ypos, zhpos, apos, bpos, [feed], [spin] }	
+
 endp
 ;========================================
-
 ;Reemplaza el caracter D con el signo Ø (ALT-157)
 @usr_replaced_str(string sReplaced)
+
 	sReplaced = replace(sReplaced,'D','Ø',0)
+
 endp
 ;========================================
 ;#######################################################################
